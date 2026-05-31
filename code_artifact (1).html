@@ -1,0 +1,696 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Play, Pause, ChevronRight, ChevronLeft, Eye, EyeOff, RefreshCcw, Volume2, Settings2, SkipForward, SkipBack, Briefcase, Monitor, DollarSign, Plane, Truck, Calendar, Bed, HeartPulse, HardHat, Building } from 'lucide-react';
+
+// 整合了基础词汇、词组以及 800分金色提高词汇，并按场景分类
+const scenarioVocab = [
+  {
+    id: "hr_office",
+    title: "办公与人事 (HR & Office)",
+    icon: Briefcase,
+    color: "bg-blue-500",
+    words: [
+      { en: "candidate", zh: "候选者" },
+      { en: "resume", zh: "简历 (CV: curriculum vitae)" },
+      { en: "hire", zh: "雇佣" },
+      { en: "personnel", zh: "人事部，全体员工" },
+      { en: "supervisor", zh: "上司，主管" },
+      { en: "payroll", zh: "工资单，发薪名单" },
+      { en: "qualified", zh: "合格的，有资格的" },
+      { en: "recruit", zh: "招募，录用" },
+      { en: "wage", zh: "工资 (按周/日结)" },
+      { en: "workforce", zh: "劳动人口 / 全体员工" },
+      { en: "evaluate", zh: "评价，评估" },
+      { en: "eligible", zh: "具备资格的" },
+      { en: "employee", zh: "雇员" },
+      { en: "employer", zh: "雇主" },
+      { en: "application", zh: "申请" },
+      { en: "management", zh: "经营, 管理" },
+      { en: "performance", zh: "表现, 业绩" },
+      { en: "executive", zh: "主管, 董事" },
+      { en: "previous", zh: "先前的" },
+      { en: "approve", zh: "批准, 赞成" },
+      { en: "opportunity", zh: "机会" },
+      { en: "deadline", zh: "截止日期" },
+      { en: "inform", zh: "通知" },
+      { en: "allow", zh: "允许" },
+      { en: "replacement", zh: "接替者, 替换物" },
+      { en: "experienced", zh: "经验丰富的" },
+      { en: "benefit", zh: "福利, 利益" },
+      { en: "participate in", zh: "参加" },
+      { en: "expert", zh: "专家" },
+      { en: "representative", zh: "代表" },
+      { en: "assist", zh: "协助" },
+      { en: "encourage", zh: "鼓励" },
+      { en: "individual", zh: "个人" },
+      { en: "colleague", zh: "同事 (coworker)" },
+      { en: "temporary", zh: "临时的" },
+      { en: "promotion", zh: "晋升" },
+      { en: "reference", zh: "推荐信, 参考" },
+      { en: "resign", zh: "辞职" },
+      { en: "retire", zh: "退休" },
+      { en: "full-time", zh: "全职的" },
+      { en: "part-time", zh: "兼职的" },
+      { en: "duty", zh: "职责, 义务" },
+      { en: "scholarship", zh: "奖学金" },
+      { en: "transfer", zh: "调动, 转移" },
+      { en: "diligent", zh: "勤奋的" },
+      { en: "understaffed", zh: "人手不足的" },
+      { en: "human resources", zh: "人力资源部" },
+      { en: "accounting", zh: "会计部" },
+      { en: "administrative", zh: "行政部" },
+      { en: "secretary", zh: "秘书" },
+      { en: "receptionist", zh: "接待员" },
+      { en: "mentoring", zh: "导师制" }
+    ]
+  },
+  {
+    id: "business_finance",
+    title: "商务与金融 (Business & Finance)",
+    icon: DollarSign,
+    color: "bg-emerald-500",
+    words: [
+      { en: "budget", zh: "预算" },
+      { en: "contract", zh: "契约，合同" },
+      { en: "client", zh: "顾客，客户" },
+      { en: "proposal", zh: "计划书，提案" },
+      { en: "bill", zh: "账单 (invoice)" },
+      { en: "revenue", zh: "收入" },
+      { en: "investment", zh: "投资 (investor)" },
+      { en: "estimate", zh: "估算，估价" },
+      { en: "shareholder", zh: "股东 (stockholder)" },
+      { en: "profit", zh: "利润" },
+      { en: "reimburse", zh: "报销，偿还" },
+      { en: "expense", zh: "费用 (expenditure)" },
+      { en: "purchase", zh: "购买" },
+      { en: "financial", zh: "金融的, 财务的" },
+      { en: "annual", zh: "每年的" },
+      { en: "payment", zh: "支付" },
+      { en: "firm", zh: "公司 (商行)" },
+      { en: "charge", zh: "收费" },
+      { en: "increase", zh: "增加" },
+      { en: "decrease", zh: "减少" },
+      { en: "fund", zh: "提供资金, 基金" },
+      { en: "grant", zh: "拨款, 补助金" },
+      { en: "economic", zh: "经济的" },
+      { en: "compete", zh: "竞争" },
+      { en: "impact", zh: "影响" },
+      { en: "income", zh: "收入" },
+      { en: "saving", zh: "积蓄, 节约" },
+      { en: "commission", zh: "佣金, 委托" },
+      { en: "asset", zh: "资产" },
+      { en: "speculation", zh: "推测, 投机" },
+      { en: "marketing", zh: "市场营销" },
+      { en: "auditor", zh: "审计员" },
+      { en: "entrepreneur", zh: "企业家" },
+      { en: "subsidiary", zh: "子公司" },
+      { en: "transaction", zh: "交易, 业务" },
+      { en: "negotiate", zh: "谈判, 交涉" }
+    ]
+  },
+  {
+    id: "meetings_events",
+    title: "会议与活动 (Meetings & Events)",
+    icon: Calendar,
+    color: "bg-purple-500",
+    words: [
+      { en: "conference", zh: "会议 (teleconference)" },
+      { en: "exhibition", zh: "展览，展品" },
+      { en: "session", zh: "阶段，会议 (培训等)" },
+      { en: "register", zh: "注册 (sign up)" },
+      { en: "banquet", zh: "晚宴 (luncheon)" },
+      { en: "venue", zh: "会场，举办地" },
+      { en: "orientation", zh: "迎新会，入职说明会" },
+      { en: "brochure", zh: "小册子 (pamphlet)" },
+      { en: "invitation", zh: "邀请函" },
+      { en: "agenda", zh: "议事日程" },
+      { en: "keynote address", zh: "主题演讲" },
+      { en: "trade fair", zh: "商品展销会" },
+      { en: "attend", zh: "出席" },
+      { en: "announce", zh: "宣布" },
+      { en: "display", zh: "展示" },
+      { en: "exhibit", zh: "展览品" },
+      { en: "presentation", zh: "演示, 报告" },
+      { en: "host", zh: "主持, 举办" },
+      { en: "schedule", zh: "日程安排" },
+      { en: "reschedule", zh: "重新安排时间" },
+      { en: "postpone", zh: "推迟" },
+      { en: "cancel", zh: "取消" },
+      { en: "celebration", zh: "庆祝活动" },
+      { en: "award", zh: "奖项" },
+      { en: "speech", zh: "演讲" },
+      { en: "seminar", zh: "研讨会" },
+      { en: "workshop", zh: "工作坊" },
+      { en: "gathering", zh: "聚会" },
+      { en: "ceremony", zh: "典礼" },
+      { en: "fund-raising", zh: "筹款" }
+    ]
+  },
+  {
+    id: "travel_transit",
+    title: "旅行与交通 (Travel & Transit)",
+    icon: Plane,
+    color: "bg-sky-500",
+    words: [
+      { en: "reserve", zh: "预约 (book)" },
+      { en: "luggage", zh: "行李 (baggage)" },
+      { en: "departure", zh: "出发" },
+      { en: "arrival", zh: "到达" },
+      { en: "commuter", zh: "通勤者" },
+      { en: "itinerary", zh: "行程，旅行日程" },
+      { en: "destination", zh: "目的地" },
+      { en: "transit", zh: "运输，中转" },
+      { en: "delay", zh: "推迟，延迟" },
+      { en: "shuttle", zh: "往返班车 / 飞梭" },
+      { en: "transportation", zh: "交通运输" },
+      { en: "vehicle", zh: "车辆 (汽车/卡车等)" },
+      { en: "passenger", zh: "乘客" },
+      { en: "flight", zh: "航班" },
+      { en: "ticket", zh: "票" },
+      { en: "fare", zh: "车费, 船费" },
+      { en: "boarding pass", zh: "登机牌" },
+      { en: "platform", zh: "站台" },
+      { en: "terminal", zh: "航站楼, 终点站" },
+      { en: "customs", zh: "海关" },
+      { en: "passport", zh: "护照" },
+      { en: "visa", zh: "签证" },
+      { en: "tourism", zh: "旅游业" },
+      { en: "guided tour", zh: "有导游的游览" },
+      { en: "excursion", zh: "短途旅行" },
+      { en: "scenic", zh: "风景优美的" },
+      { en: "landmark", zh: "地标" },
+      { en: "souvenir", zh: "纪念品" },
+      { en: "flight attendant", zh: "空乘" },
+      { en: "conductor", zh: "列车长" }
+    ]
+  },
+  {
+    id: "production_logistics",
+    title: "生产与物流 (Production & Logistics)",
+    icon: Truck,
+    color: "bg-amber-500",
+    words: [
+      { en: "delivery", zh: "快递，配送" },
+      { en: "facility", zh: "设施 (production facility)" },
+      { en: "warehouse", zh: "仓库" },
+      { en: "inventory", zh: "库存 (stock)" },
+      { en: "supplier", zh: "供应商 (vendor)" },
+      { en: "freight", zh: "货物，运输，运费" },
+      { en: "defective", zh: "有缺陷的" },
+      { en: "manufacture", zh: "制造 (manufacturer)" },
+      { en: "merchandise", zh: "商品 (goods/items)" },
+      { en: "retail", zh: "零售" },
+      { en: "capacity", zh: "生产能力" },
+      { en: "distribute", zh: "分发，分销" },
+      { en: "equipment", zh: "设备" },
+      { en: "production", zh: "生产" },
+      { en: "shipping", zh: "运输" },
+      { en: "packaging", zh: "包装" },
+      { en: "inspect", zh: "检查" },
+      { en: "quality control", zh: "质量控制" },
+      { en: "assembly line", zh: "流水线" },
+      { en: "operate", zh: "操作, 运营" },
+      { en: "maintenance", zh: "维护, 保养" },
+      { en: "out of stock", zh: "缺货" },
+      { en: "supply chain", zh: "供应链" },
+      { en: "raw materials", zh: "原材料" },
+      { en: "components", zh: "零件, 组件" },
+      { en: "machinery", zh: "机械装置" },
+      { en: "mechanic", zh: "机械师" },
+      { en: "courier", zh: "快递员" },
+      { en: "logistics", zh: "物流" }
+    ]
+  },
+  {
+    id: "hospitality",
+    title: "酒店与餐饮 (Hospitality)",
+    icon: Bed,
+    color: "bg-rose-500",
+    words: [
+      { en: "reservation", zh: "预订" },
+      { en: "accommodation", zh: "住宿 (accommodations)" },
+      { en: "complimentary", zh: "免费的 (free)" },
+      { en: "amenity", zh: "便利设施" },
+      { en: "beverage", zh: "饮料" },
+      { en: "catering", zh: "餐饮服务" },
+      { en: "concierge", zh: "门房，礼宾部" },
+      { en: "housekeeping", zh: "客房清洁" },
+      { en: "vacancy", zh: "空房" },
+      { en: "lobby", zh: "大厅" },
+      { en: "suite", zh: "套房" },
+      { en: "reception", zh: "接待处" },
+      { en: "check-in", zh: "办理入住" },
+      { en: "check-out", zh: "结账退房" },
+      { en: "menu", zh: "菜单" },
+      { en: "ingredient", zh: "食材" },
+      { en: "recipe", zh: "食谱" },
+      { en: "chef", zh: "主厨" },
+      { en: "waiter", zh: "男服务员" },
+      { en: "waitress", zh: "女服务员" },
+      { en: "tip", zh: "小费" },
+      { en: "cafeteria", zh: "自助餐厅" },
+      { en: "refreshment", zh: "茶点" },
+      { en: "dairy", zh: "乳制品" },
+      { en: "pastry", zh: "糕点" },
+      { en: "cuisine", zh: "烹饪, 菜肴" },
+      { en: "inn", zh: "小旅馆" },
+      { en: "grocery", zh: "食品杂货" },
+      { en: "portion", zh: "一份(食物)" }
+    ]
+  },
+  {
+    id: "healthcare",
+    title: "医疗与健康 (Healthcare)",
+    icon: HeartPulse,
+    color: "bg-teal-500",
+    words: [
+      { en: "prescription", zh: "处方" },
+      { en: "pharmacy", zh: "药房" },
+      { en: "symptom", zh: "症状" },
+      { en: "physician", zh: "内科医生" },
+      { en: "dentist", zh: "牙医" },
+      { en: "appointment", zh: "预约 (看病等)" },
+      { en: "checkup", zh: "体检" },
+      { en: "clinic", zh: "诊所" },
+      { en: "patient", zh: "病人" },
+      { en: "medication", zh: "药物 (medicine)" },
+      { en: "treatment", zh: "治疗" },
+      { en: "insurance", zh: "保险" },
+      { en: "surgeon", zh: "外科医生" },
+      { en: "pharmacist", zh: "药剂师" },
+      { en: "veterinarian", zh: "兽医 (vet)" },
+      { en: "medical", zh: "医学的" },
+      { en: "health", zh: "健康" },
+      { en: "disease", zh: "疾病" },
+      { en: "surgery", zh: "外科手术" },
+      { en: "recovery", zh: "恢复" },
+      { en: "emergency", zh: "紧急情况" },
+      { en: "hospital", zh: "医院" },
+      { en: "ward", zh: "病房" },
+      { en: "nurse", zh: "护士" },
+      { en: "diagnose", zh: "诊断" },
+      { en: "relieve", zh: "缓解 (疼痛等)" }
+    ]
+  },
+  {
+    id: "real_estate_construction",
+    title: "房产与建筑 (Real Estate)",
+    icon: Building,
+    color: "bg-orange-600",
+    words: [
+      { en: "property", zh: "不动产, 房产" },
+      { en: "real estate", zh: "房地产" },
+      { en: "tenant", zh: "租户, 房客" },
+      { en: "landlord", zh: "房东" },
+      { en: "lease", zh: "租约, 出租" },
+      { en: "rent", zh: "租金, 租借" },
+      { en: "mortgage", zh: "抵押贷款" },
+      { en: "construction", zh: "建筑, 建设" },
+      { en: "architect", zh: "建筑师" },
+      { en: "contractor", zh: "承包商" },
+      { en: "renovate", zh: "翻新, 装修 (remodel)" },
+      { en: "blueprint", zh: "蓝图, 设计图" },
+      { en: "plumber", zh: "水管工" },
+      { en: "carpenter", zh: "木匠" },
+      { en: "electrician", zh: "电工" },
+      { en: "inspector", zh: "检查员" },
+      { en: "complex", zh: "建筑群, 综合体" },
+      { en: "premises", zh: "房屋及庭院, 营业场所" },
+      { en: "spacious", zh: "宽敞的" },
+      { en: "furnished", zh: "配有家具的" },
+      { en: "utility", zh: "公用事业 (水电煤等)" },
+      { en: "maintenance", zh: "维修, 保养" },
+      { en: "urban", zh: "城市的" },
+      { en: "suburb", zh: "郊区" },
+      { en: "neighborhood", zh: "街区, 社区" }
+    ]
+  },
+  {
+    id: "tech_it",
+    title: "科技与设备 (Tech & IT)",
+    icon: Monitor,
+    color: "bg-cyan-600",
+    words: [
+      { en: "device", zh: "设备, 装置" },
+      { en: "equipment", zh: "设备 (不可数)" },
+      { en: "software", zh: "软件" },
+      { en: "hardware", zh: "硬件" },
+      { en: "install", zh: "安装" },
+      { en: "update", zh: "更新" },
+      { en: "upgrade", zh: "升级" },
+      { en: "network", zh: "网络" },
+      { en: "database", zh: "数据库" },
+      { en: "monitor", zh: "显示器, 监控" },
+      { en: "keyboard", zh: "键盘" },
+      { en: "appliance", zh: "家用电器" },
+      { en: "electronic", zh: "电子的" },
+      { en: "manual", zh: "手册, 说明书" },
+      { en: "instruction", zh: "指示, 说明" },
+      { en: "troubleshoot", zh: "故障排除" },
+      { en: "defective", zh: "有缺陷的, 故障的" },
+      { en: "warranty", zh: "保修" },
+      { en: "repair", zh: "修理" },
+      { en: "compatible", zh: "兼容的" },
+      { en: "innovative", zh: "创新的" },
+      { en: "outdated", zh: "过时的 (obsolete)" },
+      { en: "technician", zh: "技术员" },
+      { en: "function", zh: "功能, 运转" },
+      { en: "access", zh: "访问, 进入" }
+    ]
+  },
+  {
+    id: "frequent_phrases",
+    title: "必考高频词组 (Key Phrases)",
+    icon: HardHat,
+    color: "bg-gray-700",
+    words: [
+      { en: "look forward to", zh: "期待" },
+      { en: "take place", zh: "发生, 举行" },
+      { en: "in advance", zh: "提前, 事先" },
+      { en: "be supposed to", zh: "应该, 被期望" },
+      { en: "sign up for", zh: "报名参加" },
+      { en: "a variety of", zh: "各种各样的" },
+      { en: "find out", zh: "找出, 发现" },
+      { en: "be responsible for", zh: "对...负责" },
+      { en: "as soon as possible", zh: "尽快 (ASAP)" },
+      { en: "in charge of", zh: "负责, 管理" },
+      { en: "take advantage of", zh: "利用" },
+      { en: "on behalf of", zh: "代表..." },
+      { en: "prior to", zh: "在...之前" },
+      { en: "be aware of", zh: "意识到, 知道" },
+      { en: "out of order", zh: "出故障" },
+      { en: "out of stock", zh: "缺货" },
+      { en: "make sense", zh: "有道理, 讲得通" },
+      { en: "in progress", zh: "正在进行中" },
+      { en: "regardless of", zh: "不管, 不顾" },
+      { en: "deal with", zh: "处理, 应付" },
+      { en: "rely on", zh: "依赖, 依靠" },
+      { en: "consist of", zh: "由...组成" },
+      { en: "comply with", zh: "遵守, 服从" },
+      { en: "focus on", zh: "集中于" },
+      { en: "participate in", zh: "参加" }
+    ]
+  }
+];
+
+export default function App() {
+  const [currentView, setCurrentView] = useState('home'); // 'home' | 'player'
+  const [activeScenario, setActiveScenario] = useState(null);
+  const [wordIndex, setWordIndex] = useState(0);
+  
+  // 核心练耳设置
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [blindMode, setBlindMode] = useState(true); // 默认盲听开启！
+  const [speechRate, setSpeechRate] = useState(0.85); // 托业听力稍微放慢一点点方便辨音
+  const [pauseTime, setPauseTime] = useState(2.0); // 留2秒给大脑反应意思
+
+  const audioPlayerRef = useRef(null);
+  const isPlayingRef = useRef(isPlaying);
+  const timerRef = useRef(null);
+
+  // 同步状态到 ref 供异步函数使用
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  useEffect(() => {
+    audioPlayerRef.current = new Audio();
+    return () => stopAllAudio();
+  }, []);
+
+  const stopAllAudio = useCallback(() => {
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    clearTimeout(timerRef.current);
+  }, []);
+
+  // 监听播放状态改变
+  useEffect(() => {
+    if (!isPlaying) {
+      stopAllAudio();
+    }
+  }, [isPlaying, stopAllAudio]);
+
+  const speakLocal = (text, lang) => {
+    return new Promise((resolve) => {
+      if (!isPlayingRef.current) return resolve();
+      const cleanText = text.replace(/\s*\/\s*/g, ', ');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = lang === 'en' ? 'en-US' : 'zh-CN';
+      utterance.rate = speechRate;
+      
+      const voices = window.speechSynthesis.getVoices();
+      if (lang === 'en') {
+        utterance.voice = voices.find(v => v.name.includes('Google US English')) || voices.find(v => v.lang === 'en-US') || null;
+      } else {
+        utterance.voice = voices.find(v => v.lang === 'zh-CN') || null;
+      }
+      utterance.onend = resolve;
+      utterance.onerror = resolve; 
+      window.speechSynthesis.speak(utterance);
+    });
+  };
+
+  const speak = (text, lang) => {
+    return new Promise((resolve) => {
+      if (!isPlayingRef.current) return resolve();
+      if (audioPlayerRef.current) {
+        const cleanText = text.replace(/\s*\/\s*/g, ', ');
+        const url = lang === 'en'
+          ? `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(cleanText)}&type=2`
+          : `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(cleanText)}&le=zh`;
+        
+        const audio = audioPlayerRef.current;
+        audio.src = url;
+        audio.playbackRate = speechRate;
+        audio.onended = resolve;
+        audio.onerror = () => speakLocal(text, lang).then(resolve);
+        audio.play().catch(() => speakLocal(text, lang).then(resolve));
+      } else {
+        speakLocal(text, lang).then(resolve);
+      }
+    });
+  };
+
+  const goToNext = useCallback(() => {
+    if (!activeScenario) return;
+    setWordIndex((prev) => (prev + 1) % activeScenario.words.length);
+  }, [activeScenario]);
+
+  const goToPrev = () => {
+    if (!activeScenario) return;
+    setWordIndex((prev) => (prev === 0 ? activeScenario.words.length - 1 : prev - 1));
+  };
+
+  const playSequence = async () => {
+    if (!isPlayingRef.current || !activeScenario) return;
+    const word = activeScenario.words[wordIndex];
+
+    try {
+      // 1. 播放英文
+      await speak(word.en, 'en');
+      if (!isPlayingRef.current) return;
+      
+      // 2. 留白：给大脑反应意思的时间
+      await new Promise(r => setTimeout(r, pauseTime * 1000));
+      if (!isPlayingRef.current) return;
+      
+      // 3. 播放中文验证
+      await speak(word.zh, 'zh');
+      
+      // 4. 短暂延迟后进入下一个
+      if (isPlayingRef.current) {
+        timerRef.current = setTimeout(() => {
+          if (isPlayingRef.current) {
+            goToNext();
+          }
+        }, 1000); // 中文说完后1秒播下一个
+      }
+    } catch (error) {
+      console.error("Playback error:", error);
+    }
+  };
+
+  // 依赖监听：当前单词改变且正在播放时，触发发音
+  useEffect(() => {
+    if (isPlaying && activeScenario) {
+      playSequence();
+    }
+  }, [wordIndex, isPlaying, activeScenario]);
+
+  const togglePlay = () => {
+    if (!isPlaying) {
+      // iOS Audio Unlock Hack
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+        audioPlayerRef.current.play().catch(() => {});
+      }
+      if (window.speechSynthesis) {
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+      }
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(false);
+    }
+  };
+
+  const openScenario = (scenario) => {
+    setActiveScenario(scenario);
+    setWordIndex(0);
+    setBlindMode(true); // 进入场景默认开启盲听
+    setIsPlaying(false);
+    setCurrentView('player');
+  };
+
+  const closeScenario = () => {
+    setIsPlaying(false);
+    setCurrentView('home');
+    setActiveScenario(null);
+  };
+
+  const handleSkip = (direction) => {
+    stopAllAudio();
+    if (direction === 'next') goToNext();
+    else goToPrev();
+  };
+
+  if (currentView === 'home') {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans p-4 pb-10">
+        <header className="pt-8 pb-6 px-2">
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">听力练耳 (750分冲刺)</h1>
+          <div className="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg shadow-sm">
+            <h3 className="font-bold text-indigo-800 mb-1 flex items-center gap-2">
+              <HardHat size={18} /> 0基础提分核心策略
+            </h3>
+            <p className="text-indigo-700 text-sm leading-relaxed">
+              听力不需要完全听懂！只需敏锐捕捉<b>核心词读音</b>。
+              <br/><b>方法：</b>闭上眼睛听发音，在脑海中立刻拼出它的<b>英文长相</b>。考试时在ABCD选项里找这个长相直接选！
+            </p>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-2">
+          {scenarioVocab.map((scenario) => {
+            const Icon = scenario.icon;
+            return (
+              <button
+                key={scenario.id}
+                onClick={() => openScenario(scenario)}
+                className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-all active:scale-95 text-left"
+              >
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-white shadow-sm flex-shrink-0 ${scenario.color}`}>
+                  <Icon size={26} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-slate-800 text-base truncate">{scenario.title.split(' ')[0]}</h3>
+                  <p className="text-xs text-slate-400 mt-0.5 truncate">{scenario.title.split(' ').slice(1).join(' ')}</p>
+                  <div className="text-[10px] font-medium text-slate-500 mt-1.5 bg-slate-50 inline-block px-2 py-0.5 rounded-md">
+                    {scenario.words.length} 词
+                  </div>
+                </div>
+                <ChevronRight className="text-slate-300 flex-shrink-0" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'player' && activeScenario) {
+    const currentWord = activeScenario.words[wordIndex];
+
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
+        {/* 顶部导航 */}
+        <div className="bg-white px-4 py-4 flex items-center justify-between shadow-sm z-10">
+          <button onClick={closeScenario} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
+            <ChevronLeft size={28} />
+          </button>
+          <div className="font-bold text-slate-700 truncate px-2">{activeScenario.title.split(' ')[0]}</div>
+          <button 
+            onClick={() => setBlindMode(!blindMode)}
+            className={`p-2 rounded-full transition-colors ${blindMode ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:bg-slate-100'}`}
+          >
+            {blindMode ? <EyeOff size={22} /> : <Eye size={22} />}
+          </button>
+        </div>
+
+        {/* 核心练耳区 */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
+          
+          {/* 进度条 */}
+          <div className="absolute top-8 left-6 right-6">
+            <div className="flex justify-between text-xs text-slate-400 font-medium mb-2">
+              <span>{wordIndex + 1}</span>
+              <span>{activeScenario.words.length}</span>
+            </div>
+            <div className="w-full bg-slate-200 rounded-full h-1.5">
+              <div 
+                className={`h-1.5 rounded-full transition-all duration-300 ${activeScenario.color}`} 
+                style={{ width: `${((wordIndex + 1) / activeScenario.words.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* 单词卡片 */}
+          <div 
+            onClick={() => setBlindMode(false)}
+            className={`w-full max-w-sm aspect-square bg-white rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center justify-center p-8 text-center transition-all cursor-pointer relative overflow-hidden ${blindMode ? 'shadow-indigo-100' : ''}`}
+          >
+            {blindMode ? (
+              <div className="flex flex-col items-center animate-pulse">
+                <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 bg-slate-50 ${activeScenario.color.replace('bg-', 'text-')}`}>
+                  <Volume2 size={48} />
+                </div>
+                <h2 className="text-xl font-bold text-slate-700 mb-2">盲听模式中</h2>
+                <p className="text-sm text-slate-400">听发音，在脑海拼写出<b>英文长相</b><br/>想不起来？点击卡片查看。</p>
+              </div>
+            ) : (
+              <div className="animate-in fade-in zoom-in duration-300 w-full">
+                <div className={`text-xs font-bold mb-4 tracking-widest uppercase ${activeScenario.color.replace('bg-', 'text-')}`}>
+                  {activeScenario.title.split(' ')[0]}
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-800 mb-4 leading-tight tracking-tight break-words">
+                  {currentWord.en}
+                </h2>
+                <div className="w-12 h-1 bg-slate-100 mx-auto rounded-full mb-6"></div>
+                <p className="text-xl sm:text-2xl font-medium text-slate-600">
+                  {currentWord.zh}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-8 text-xs text-slate-400">
+             提示：调整手机音量，闭上眼睛效果更好
+          </div>
+        </div>
+
+        {/* 底部控制栏 */}
+        <div className="bg-white rounded-t-3xl p-8 pb-10 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] flex items-center justify-center gap-8">
+          <button onClick={() => handleSkip('prev')} className="text-slate-400 hover:text-slate-800 active:scale-90 transition-all">
+            <SkipBack size={32} />
+          </button>
+          
+          <button 
+            onClick={togglePlay}
+            className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-lg active:scale-95 transition-all ${activeScenario.color}`}
+          >
+            {isPlaying ? <Pause size={32} fill="currentColor"/> : <Play size={32} fill="currentColor" className="ml-2"/>}
+          </button>
+          
+          <button onClick={() => handleSkip('next')} className="text-slate-400 hover:text-slate-800 active:scale-90 transition-all">
+            <SkipForward size={32} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
